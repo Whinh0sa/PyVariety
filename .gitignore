@@ -1,0 +1,22 @@
+# Python caches
+__pycache__/
+*.py[cod]
+*$py.class
+
+# PyInstaller
+build/
+dist/
+*.spec
+
+# Virtual Environments
+venv/
+env/
+.env
+
+# Application config / cache (just in case they were pushed to local dir)
+.pyvariety/
+config.json
+
+# IDE
+.vscode/
+.idea/
