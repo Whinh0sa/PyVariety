@@ -76,20 +76,15 @@ class PyVarietyGUI(ctk.CTk):
         self.adv_label = ctk.CTkLabel(self.adv_frame, text="Advanced source configs:", font=ctk.CTkFont(weight="bold"))
         self.adv_label.grid(row=0, column=0, padx=10, pady=5, sticky="w")
         
-        self.wh_api_label = ctk.CTkLabel(self.adv_frame, text="Wallhaven API Key (Optional):")
-        self.wh_api_label.grid(row=1, column=0, padx=10, pady=5, sticky="w")
-        self.wh_api_entry = ctk.CTkEntry(self.adv_frame, width=300, show="*")
-        self.wh_api_entry.grid(row=1, column=1, padx=10, pady=5, sticky="w")
-        
         self.local_dir_label = ctk.CTkLabel(self.adv_frame, text="Local Directory Path:")
-        self.local_dir_label.grid(row=2, column=0, padx=10, pady=5, sticky="w")
+        self.local_dir_label.grid(row=1, column=0, padx=10, pady=5, sticky="w")
         self.local_dir_entry = ctk.CTkEntry(self.adv_frame, width=300)
-        self.local_dir_entry.grid(row=2, column=1, padx=10, pady=5, sticky="w")
+        self.local_dir_entry.grid(row=1, column=1, padx=10, pady=5, sticky="w")
 
         self.fav_dir_label = ctk.CTkLabel(self.adv_frame, text="Favorites Save Target:")
-        self.fav_dir_label.grid(row=3, column=0, padx=10, pady=5, sticky="w")
+        self.fav_dir_label.grid(row=2, column=0, padx=10, pady=5, sticky="w")
         self.fav_dir_entry = ctk.CTkEntry(self.adv_frame, width=300)
-        self.fav_dir_entry.grid(row=3, column=1, padx=10, pady=5, sticky="w")
+        self.fav_dir_entry.grid(row=2, column=1, padx=10, pady=5, sticky="w")
         
         # --- OS Integrations ---
         self.os_frame = ctk.CTkFrame(self, corner_radius=10)
@@ -139,7 +134,6 @@ class PyVarietyGUI(ctk.CTk):
         self.var_natgeo.set("natgeo" in active_sources)
         
         # Advanced
-        self.wh_api_entry.insert(0, config.get("wallhaven_api_key", ""))
         local_paths = config.get("local_paths", [])
         if local_paths:
             self.local_dir_entry.insert(0, local_paths[0])
@@ -169,8 +163,6 @@ class PyVarietyGUI(ctk.CTk):
         if self.var_bing.get(): new_sources.append("bing")
         if self.var_natgeo.get(): new_sources.append("natgeo")
         config["sources"] = new_sources
-        
-        config["wallhaven_api_key"] = self.wh_api_entry.get()
         
         new_local = self.local_dir_entry.get().strip()
         if new_local:

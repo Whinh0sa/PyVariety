@@ -154,12 +154,12 @@ class Fetcher:
         
     def fetch_wallhaven(self) -> Optional[str]:
         """Downloads a random high-quality Wallhaven image."""
-        query = self.config.get("wallhaven_query", "nature")
         api_key = self.config.get("wallhaven_api_key", "")
         
         # categories: 100 (General), 010 (Anime), 001 (People) - '110' is general+anime
         # purity: 100 (SFW)
-        url = f"https://wallhaven.cc/api/v1/search?q={query}&categories=110&purity=100&sorting=random&resolutions=1920x1080"
+        # We removed query tags to prevent API ratelimiting and ensure maximum randomness.
+        url = f"https://wallhaven.cc/api/v1/search?categories=111&purity=100&sorting=random&resolutions=1920x1080"
         if api_key:
             url += f"&apikey={api_key}"
             
@@ -261,7 +261,7 @@ class Fetcher:
         # so we will use Unsplash's NatGeo-style nature search as a reliable proxy to mimic it
         # to ensure it always successfully pulls ultra high quality nature photograph without breaking.
         logger.info("NatGeo fetch requested, pulling proxy Nature/Wildlife photography.")
-        url = "https://source.unsplash.com/random/1920x1080/?wildlife,natgeo,national-geographic"
+        url = "https://source.unsplash.com/random/1920x1080/?nature,wildlife"
         return self.download_image(url, "natgeo")
 
     def download_image(self, url: str, prefix: str) -> Optional[str]:

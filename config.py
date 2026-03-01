@@ -29,8 +29,6 @@ DEFAULT_CONFIG = {
         "show_quote": False,
         "pause_on_fullscreen": True
     },
-    "unsplash_query": "dark,movie stills,landscape",
-    "wallhaven_query": "dark wallpapers,anime,Miles Morales,movie stills",
     "wallhaven_api_key": "",
     "reddit_subreddits": ["EarthPorn", "wallpaper", "Amoledbackgrounds", "MoviePosterPorn"],
     "autostart": False
