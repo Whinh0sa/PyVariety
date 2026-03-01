@@ -16,7 +16,7 @@ PyVariety is a highly-capable, open-source Python application for Windows that r
 Download the pre-compiled standalone executable from the Releases page, or build it yourself:
 
 \`\`\`powershell
-git clone https://github.com/[YOUR-USERNAME]/pyvariety.git
+git clone https://github.com/Whinh0sa/pyvariety.git
 cd pyvariety
 pip install -r requirements.txt
 python main.py
