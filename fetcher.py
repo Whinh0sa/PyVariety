@@ -149,7 +149,9 @@ class Fetcher:
 
     def fetch_unsplash(self) -> Optional[str]:
         """Downloads a random Unsplash image in 1920x1080 without query tags."""
-        url = "https://source.unsplash.com/random/1920x1080/"
+        # Unsplash caches generic random requests heavily. We use a random 'sig' parameter to bypass this.
+        sig = random.randint(1, 100000)
+        url = f"https://source.unsplash.com/random/1920x1080/?sig={sig}"
         return self.download_image(url, "unsplash")
         
     def fetch_wallhaven(self) -> Optional[str]:
@@ -187,7 +189,8 @@ class Fetcher:
             return None
             
         subreddit = random.choice(subreddits)
-        url = f"https://www.reddit.com/r/{subreddit}/hot.json?limit=25"
+        # Fetch top 100 to reduce chance of repeats over multiple rotations
+        url = f"https://www.reddit.com/r/{subreddit}/hot.json?limit=100"
         
         try:
             # Reddit requires a custom User-Agent to prevent 429 Too Many Requests errors
@@ -237,18 +240,19 @@ class Fetcher:
         return None
 
     def fetch_bing(self) -> Optional[str]:
-        """Downloads the Bing Photo of the Day."""
+        """Downloads a random recent Bing Photo of the Day."""
         try:
-            url = "https://www.bing.com/HPImageArchive.aspx?format=js&idx=0&n=1&mkt=en-US"
+            # Bing allows up to 8 recent images. Using n=8 provides variety instead of the same photo repeatedly.
+            url = "https://www.bing.com/HPImageArchive.aspx?format=js&idx=0&n=8&mkt=en-US"
             resp = requests.get(url, timeout=5)
             if resp.status_code == 200:
                 data = resp.json()
                 images = data.get("images", [])
                 if images:
-                    img_path = images[0].get("url")
+                    img_data = random.choice(images)
+                    img_path = img_data.get("url")
                     if img_path:
                         img_url = "https://www.bing.com" + img_path
-                        # force 1080p high res usually
                         img_url = img_url.replace("1920x1080", "1920x1080")
                         return self.download_image(img_url, "bing")
         except Exception as e:
@@ -261,7 +265,8 @@ class Fetcher:
         # so we will use Unsplash's NatGeo-style nature search as a reliable proxy to mimic it
         # to ensure it always successfully pulls ultra high quality nature photograph without breaking.
         logger.info("NatGeo fetch requested, pulling proxy Nature/Wildlife photography.")
-        url = "https://source.unsplash.com/random/1920x1080/?nature,wildlife"
+        sig = random.randint(1, 100000)
+        url = f"https://source.unsplash.com/random/1920x1080/?nature,wildlife&sig={sig}"
         return self.download_image(url, "natgeo")
 
     def download_image(self, url: str, prefix: str) -> Optional[str]:
