@@ -29,6 +29,12 @@ class PyVarietyApp:
         # Track active wallpaper to prevent redundant processing if re-triggered
         self.current_wallpaper = None
 
+    def _get_active_wallpaper_path(self):
+        """Returns the currently active processed wallpaper or None."""
+        if hasattr(self.fetcher.playlist, 'current') and self.fetcher.playlist.current:
+            return self.fetcher.playlist.current
+        return None
+
     def change_wallpaper(self):
         """Core logic to fetch, process, and set a new wallpaper."""
         logger.info("Initiating wallpaper change sequence...")
@@ -53,8 +59,64 @@ class PyVarietyApp:
         if success:
             self.current_wallpaper = final_path
             logger.info("Wallpaper update sequence complete.")
+            if self.tray and self.tray.icon:
+                self.tray.icon.update_menu()
         else:
             logger.error("Failed to set wallpaper.")
+
+    def previous_wallpaper(self):
+        """Rewinds the playlist to the previous wallpaper."""
+        logger.info("Reverting to previous wallpaper...")
+        img_path = self.fetcher.playlist.previous_image()
+        if img_path:
+            processed_path = os.path.join(os.path.dirname(img_path), "processed_" + os.path.basename(img_path))
+            final_path = process_image(img_path, self.config, processed_path)
+            if final_path:
+                set_wallpaper(final_path)
+                self.current_wallpaper = final_path
+                if self.tray and self.tray.icon:
+                    self.tray.icon.update_menu()
+                    
+    def favorite_wallpaper(self):
+        """Copies the current active wallpaper to the configured Favorites folder."""
+        import shutil
+        active_path = self._get_active_wallpaper_path()
+        if not active_path or not os.path.exists(active_path):
+            logger.warning("No active wallpaper found to favorite.")
+            return
+            
+        fav_folder = Path(self.config.get("favorites_folder", str(Path.home() / "Pictures" / "PyVariety_Favorites")))
+        fav_folder.mkdir(parents=True, exist_ok=True)
+        
+        try:
+            filename = os.path.basename(active_path)
+            if filename.startswith("processed_"):
+                filename = filename.replace("processed_", "", 1)
+            
+            target_path = fav_folder / filename
+            shutil.copy2(active_path, target_path)
+            logger.info(f"Favorited wallpaper to {target_path}")
+        except Exception as e:
+            logger.error(f"Failed to favorite wallpaper: {e}")
+
+    def trash_wallpaper(self):
+        """Deletes the current wallpaper from disk and skips to the next one."""
+        active_path = self._get_active_wallpaper_path()
+        if not active_path or not os.path.exists(active_path):
+            logger.warning("No active wallpaper found to trash.")
+            return
+            
+        try:
+            os.remove(active_path)
+            logger.info(f"Trashed wallpaper: {active_path}")
+            
+            processed_path = os.path.join(os.path.dirname(active_path), f"processed_{os.path.basename(active_path)}")
+            if os.path.exists(processed_path):
+                os.remove(processed_path)
+                
+            self.change_wallpaper()
+        except Exception as e:
+            logger.error(f"Failed to trash wallpaper: {e}")
 
     def open_settings(self):
         """Launch the CustomTkinter GUI."""
@@ -92,10 +154,14 @@ class PyVarietyApp:
         # Initialize system tray UI
         self.tray = TrayIcon(
             rotate_action=self.change_wallpaper,
+            previous_action=self.previous_wallpaper,
+            favorite_action=self.favorite_wallpaper,
+            trash_action=self.trash_wallpaper,
             pause_action=self.scheduler.pause,
             resume_action=self.scheduler.resume,
             settings_action=self.open_settings,
             quit_action=self.quit_app,
+            app_ref=self,
             is_paused=False
         )
         

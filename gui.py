@@ -48,6 +48,8 @@ class PyVarietyGUI(ctk.CTk):
         self.var_wallhaven = ctk.BooleanVar()
         self.var_reddit = ctk.BooleanVar()
         self.var_local = ctk.BooleanVar()
+        self.var_bing = ctk.BooleanVar()
+        self.var_natgeo = ctk.BooleanVar()
         
         self.cb_unsplash = ctk.CTkCheckBox(self.sources_frame, text="Unsplash", variable=self.var_unsplash)
         self.cb_unsplash.grid(row=1, column=0, padx=10, pady=5, sticky="w")
@@ -60,6 +62,12 @@ class PyVarietyGUI(ctk.CTk):
         
         self.cb_local = ctk.CTkCheckBox(self.sources_frame, text="Local Directory", variable=self.var_local)
         self.cb_local.grid(row=4, column=0, padx=10, pady=5, sticky="w")
+
+        self.cb_bing = ctk.CTkCheckBox(self.sources_frame, text="Bing POTD", variable=self.var_bing)
+        self.cb_bing.grid(row=5, column=0, padx=10, pady=5, sticky="w")
+
+        self.cb_natgeo = ctk.CTkCheckBox(self.sources_frame, text="NatGeo POTD Proxy", variable=self.var_natgeo)
+        self.cb_natgeo.grid(row=6, column=0, padx=10, pady=5, sticky="w")
         
         # --- Advanced Settings Frame ---
         self.adv_frame = ctk.CTkFrame(self, corner_radius=10)
@@ -77,6 +85,11 @@ class PyVarietyGUI(ctk.CTk):
         self.local_dir_label.grid(row=2, column=0, padx=10, pady=5, sticky="w")
         self.local_dir_entry = ctk.CTkEntry(self.adv_frame, width=300)
         self.local_dir_entry.grid(row=2, column=1, padx=10, pady=5, sticky="w")
+
+        self.fav_dir_label = ctk.CTkLabel(self.adv_frame, text="Favorites Save Target:")
+        self.fav_dir_label.grid(row=3, column=0, padx=10, pady=5, sticky="w")
+        self.fav_dir_entry = ctk.CTkEntry(self.adv_frame, width=300)
+        self.fav_dir_entry.grid(row=3, column=1, padx=10, pady=5, sticky="w")
         
         # --- OS Integrations ---
         self.os_frame = ctk.CTkFrame(self, corner_radius=10)
@@ -122,12 +135,16 @@ class PyVarietyGUI(ctk.CTk):
         self.var_wallhaven.set("wallhaven" in active_sources)
         self.var_reddit.set("reddit" in active_sources)
         self.var_local.set("local" in active_sources)
+        self.var_bing.set("bing" in active_sources)
+        self.var_natgeo.set("natgeo" in active_sources)
         
         # Advanced
         self.wh_api_entry.insert(0, config.get("wallhaven_api_key", ""))
         local_paths = config.get("local_paths", [])
         if local_paths:
             self.local_dir_entry.insert(0, local_paths[0])
+            
+        self.fav_dir_entry.insert(0, config.get("favorites_folder", ""))
             
         # OS Integration (Check registry indirectly by seeing if we flagged it in config, 
         # or checking the actual registry. For simplicity, we track intention in config)
@@ -149,6 +166,8 @@ class PyVarietyGUI(ctk.CTk):
         if self.var_wallhaven.get(): new_sources.append("wallhaven")
         if self.var_reddit.get(): new_sources.append("reddit")
         if self.var_local.get(): new_sources.append("local")
+        if self.var_bing.get(): new_sources.append("bing")
+        if self.var_natgeo.get(): new_sources.append("natgeo")
         config["sources"] = new_sources
         
         config["wallhaven_api_key"] = self.wh_api_entry.get()
@@ -156,6 +175,10 @@ class PyVarietyGUI(ctk.CTk):
         new_local = self.local_dir_entry.get().strip()
         if new_local:
             config["local_paths"] = [new_local]
+            
+        new_fav = self.fav_dir_entry.get().strip()
+        if new_fav:
+            config["favorites_folder"] = new_fav
             
         # OS Int
         autostart_enabled = self.var_autostart.get()
