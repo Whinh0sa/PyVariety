@@ -95,7 +95,7 @@ class Fetcher:
         images = []
         if CACHE_DIR.exists():
             for file in CACHE_DIR.rglob("*"):
-                if file.is_file() and file.suffix.lower() in {".jpg", ".jpeg", ".png", ".bmp"}:
+                if file.is_file() and file.suffix.lower() in {".jpg", ".jpeg", ".png", ".bmp"} and not file.name.startswith("processed_"):
                     images.append(str(file.absolute()))
         return images
 
@@ -111,7 +111,7 @@ class Fetcher:
                 continue
             
             for file in path.rglob("*"):
-                if file.is_file() and file.suffix.lower() in extensions:
+                if file.is_file() and file.suffix.lower() in extensions and not file.name.startswith("processed_"):
                     images.append(str(file.absolute()))
                     
         return images

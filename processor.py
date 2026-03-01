@@ -70,9 +70,11 @@ def process_image(image_path: str, config: dict, output_path: str) -> str:
                 # Draw Clock Bottom Left
                 if show_clock:
                     time_str = datetime.datetime.now().strftime("%I:%M %p")
-                    # Draw subtle shadow for readability
-                    draw.text((105, height - 245), time_str, font=font_large, fill=(0, 0, 0, 150))
-                    draw.text((100, height - 250), time_str, font=font_large, fill=(255, 255, 255, 255))
+                    x, y = 100, height - 250
+                    # Draw thick outline for readability
+                    for adj_x, adj_y in [(-3,-3), (3,-3), (-3,3), (3,3), (0,4), (0,-4), (4,0), (-4,0)]:
+                        draw.text((x + adj_x, y + adj_y), time_str, font=font_large, fill=(0, 0, 0, 180))
+                    draw.text((x, y), time_str, font=font_large, fill=(255, 255, 255, 255))
                     
                 # Draw Quote Bottom Center, safely wrapped
                 if show_quote:
@@ -91,8 +93,9 @@ def process_image(image_path: str, config: dict, output_path: str) -> str:
                             line_width = right - left
                             x = (width - line_width) // 2
                             
-                            # Ensure it aligns properly without clipping edges
-                            draw.text((x + 3, y_offset + 3), line, font=font_small, fill=(0, 0, 0, 180))
+                            # Draw thick outline
+                            for adj_x, adj_y in [(-2,-2), (2,-2), (-2,2), (2,2), (0,3), (0,-3), (3,0), (-3,0)]:
+                                draw.text((x + adj_x, y_offset + adj_y), line, font=font_small, fill=(0, 0, 0, 200))
                             draw.text((x, y_offset), line, font=font_small, fill=(255, 255, 255, 255))
                             y_offset += 45
 
