@@ -9,27 +9,40 @@ from config import config
 logger = logging.getLogger(__name__)
 
 class WallpaperScheduler:
-    def __init__(self, action_func, interval_minutes: int):
+    def __init__(self, action_func, interval_amount: int, interval_unit: str):
         """
         Initializes the background scheduler.
         :param action_func: The function to call when rotating wallpapers.
-        :param interval_minutes: How often to rotate.
+        :param interval_amount: How often to rotate.
+        :param interval_unit: Unit of time ('minutes', 'hours', 'days').
         """
         self.action_func = action_func
-        self.interval_minutes = interval_minutes
+        self.interval_amount = interval_amount
+        self.interval_unit = interval_unit
         self.running = False
         self.paused = False
         self._thread = None
         
         # Pull performance toggle
-        self.pause_on_fullscreen = config.get("features", {}).get("pause_on_fullscreen", True)
+        self.pause_on_fullscreen = config.get("pause_on_fullscreen", True)
         
         # Initial schedule setup
         self._setup_schedule()
 
     def _setup_schedule(self):
         schedule.clear()
-        schedule.every(self.interval_minutes).minutes.do(self._job)
+        amount = self.interval_amount
+        unit = self.interval_unit.lower()
+        
+        if unit == 'minutes' or unit == 'minute':
+            schedule.every(amount).minutes.do(self._job)
+        elif unit == 'hours' or unit == 'hour':
+            schedule.every(amount).hours.do(self._job)
+        elif unit == 'days' or unit == 'day':
+            schedule.every(amount).days.do(self._job)
+        else:
+            # Fallback
+            schedule.every(amount).minutes.do(self._job)
 
     def _job(self):
         if self.paused:
@@ -43,11 +56,12 @@ class WallpaperScheduler:
         logger.info("Scheduler triggered wallpaper rotation.")
         self.action_func()
 
-    def set_interval(self, minutes: int):
+    def set_interval(self, amount: int, unit: str):
         """Update the rotation interval without restarting the daemon."""
-        self.interval_minutes = minutes
+        self.interval_amount = amount
+        self.interval_unit = unit
         self._setup_schedule()
-        logger.info(f"Scheduler interval updated to {minutes} minutes.")
+        logger.info(f"Scheduler interval updated to {amount} {unit}.")
 
     def start(self):
         """Start the background daemon thread."""

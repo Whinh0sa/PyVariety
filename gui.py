@@ -10,39 +10,59 @@ class PyVarietyGUI(ctk.CTk):
         super().__init__()
         
         self.on_close_callback = on_close_callback
-        self.title("PyVariety Settings")
-        self.geometry("600x750")
+        self.title("Variety Preferences")
+        self.geometry("900x700")
         
-        # Configure grid for resizing
-        self.grid_columnconfigure(0, weight=1)
-        
-        # Glassmorphism aesthetic / Modern look
         ctk.set_appearance_mode("Dark")
-        ctk.set_default_color_theme("blue")
+        ctk.set_default_color_theme("green")
         
-        self.create_widgets()
+        self.grid_columnconfigure(0, weight=1)
+        self.grid_rowconfigure(0, weight=1)
+        
+        self.tabview = ctk.CTkTabview(self)
+        self.tabview.grid(row=0, column=0, padx=20, pady=20, sticky="nsew")
+        
+        self.tab_general = self.tabview.add("General")
+        self.tab_wallpaper = self.tabview.add("Wallpaper")
+        self.tab_quotes = self.tabview.add("Quotes")
+        self.tab_clock = self.tabview.add("Clock")
+        self.tab_downloading = self.tabview.add("Downloading")
+        
+        self.create_general_tab()
+        self.create_wallpaper_tab()
+        self.create_quotes_tab()
+        self.create_clock_tab()
+        self.create_downloading_tab()
+        
+        # Save Button at bottom absolute
+        self.save_button = ctk.CTkButton(self, text="Close and Save", command=self.save_and_close)
+        self.save_button.grid(row=1, column=0, padx=20, pady=(0, 20), sticky="e")
+        
         self.load_current_settings()
 
-    def create_widgets(self):
-        # --- Title Block ---
-        self.title_label = ctk.CTkLabel(self, text="PyVariety Configuration", font=ctk.CTkFont(size=24, weight="bold"))
-        self.title_label.grid(row=0, column=0, padx=20, pady=(20, 10), sticky="nw")
+    def create_general_tab(self):
+        # Auto start & interval
+        fr_top = ctk.CTkFrame(self.tab_general, fg_color="transparent")
+        fr_top.pack(fill="x", padx=10, pady=10)
         
-        # --- General Settings Frame ---
-        self.general_frame = ctk.CTkFrame(self, corner_radius=10)
-        self.general_frame.grid(row=1, column=0, padx=20, pady=10, sticky="ew")
+        self.var_autostart = ctk.BooleanVar()
+        ctk.CTkCheckBox(fr_top, text="Start Variety when the computer starts", variable=self.var_autostart).pack(anchor="w", pady=5)
         
-        self.interval_label = ctk.CTkLabel(self.general_frame, text="Rotation Interval (Minutes):")
-        self.interval_label.grid(row=0, column=0, padx=10, pady=10, sticky="w")
-        self.interval_entry = ctk.CTkEntry(self.general_frame, width=100)
-        self.interval_entry.grid(row=0, column=1, padx=10, pady=10, sticky="w")
+        self.var_pause_fs = ctk.BooleanVar()
+        ctk.CTkCheckBox(fr_top, text="Pause rotation on fullscreen app (Performance mode)", variable=self.var_pause_fs).pack(anchor="w", pady=5)
         
-        # --- Active Sources Frame ---
-        self.sources_frame = ctk.CTkFrame(self, corner_radius=10)
-        self.sources_frame.grid(row=2, column=0, padx=20, pady=10, sticky="ew")
+        fr_interval = ctk.CTkFrame(fr_top, fg_color="transparent")
+        fr_interval.pack(anchor="w", pady=5)
+        ctk.CTkLabel(fr_interval, text="Change wallpaper every").pack(side="left", padx=(0,10))
+        self.interval_entry = ctk.CTkEntry(fr_interval, width=50)
+        self.interval_entry.pack(side="left")
+        self.interval_unit_var = ctk.StringVar(value="minutes")
+        ctk.CTkOptionMenu(fr_interval, values=["minutes", "hours", "days"], variable=self.interval_unit_var, width=100).pack(side="left", padx=10)
         
-        self.sources_label = ctk.CTkLabel(self.sources_frame, text="Active Sources:", font=ctk.CTkFont(weight="bold"))
-        self.sources_label.grid(row=0, column=0, padx=10, pady=5, sticky="w")
+        # Images Sources
+        fr_src = ctk.CTkFrame(self.tab_general)
+        fr_src.pack(fill="x", padx=10, pady=10)
+        ctk.CTkLabel(fr_src, text="Images", font=ctk.CTkFont(weight="bold")).pack(anchor="w", padx=10, pady=5)
         
         self.var_unsplash = ctk.BooleanVar()
         self.var_wallhaven = ctk.BooleanVar()
@@ -51,145 +71,240 @@ class PyVarietyGUI(ctk.CTk):
         self.var_bing = ctk.BooleanVar()
         self.var_natgeo = ctk.BooleanVar()
         
-        self.cb_unsplash = ctk.CTkCheckBox(self.sources_frame, text="Unsplash", variable=self.var_unsplash)
-        self.cb_unsplash.grid(row=1, column=0, padx=10, pady=5, sticky="w")
+        ctk.CTkCheckBox(fr_src, text="Unsplash High-Res Search", variable=self.var_unsplash).pack(anchor="w", padx=20, pady=2)
+        ctk.CTkCheckBox(fr_src, text="Wallhaven (Anime/General/Nature)", variable=self.var_wallhaven).pack(anchor="w", padx=20, pady=2)
+        ctk.CTkCheckBox(fr_src, text="Reddit /r/EarthPorn & Wallpapers", variable=self.var_reddit).pack(anchor="w", padx=20, pady=2)
+        ctk.CTkCheckBox(fr_src, text="Bing Photo of the Day", variable=self.var_bing).pack(anchor="w", padx=20, pady=2)
+        ctk.CTkCheckBox(fr_src, text="NatGeo Photo Proxy", variable=self.var_natgeo).pack(anchor="w", padx=20, pady=2)
+        ctk.CTkCheckBox(fr_src, text="Local Folders", variable=self.var_local).pack(anchor="w", padx=20, pady=2)
         
-        self.cb_wallhaven = ctk.CTkCheckBox(self.sources_frame, text="Wallhaven", variable=self.var_wallhaven)
-        self.cb_wallhaven.grid(row=2, column=0, padx=10, pady=5, sticky="w")
-        
-        self.cb_reddit = ctk.CTkCheckBox(self.sources_frame, text="Reddit", variable=self.var_reddit)
-        self.cb_reddit.grid(row=3, column=0, padx=10, pady=5, sticky="w")
-        
-        self.cb_local = ctk.CTkCheckBox(self.sources_frame, text="Local Directory", variable=self.var_local)
-        self.cb_local.grid(row=4, column=0, padx=10, pady=5, sticky="w")
+        # Local Paths
+        fr_local = ctk.CTkFrame(self.tab_general, fg_color="transparent")
+        fr_local.pack(fill="x", padx=10, pady=10)
+        ctk.CTkLabel(fr_local, text="Local Directory Path:").pack(side="left", padx=10)
+        self.local_dir_entry = ctk.CTkEntry(fr_local, width=300)
+        self.local_dir_entry.pack(side="left")
 
-        self.cb_bing = ctk.CTkCheckBox(self.sources_frame, text="Bing POTD", variable=self.var_bing)
-        self.cb_bing.grid(row=5, column=0, padx=10, pady=5, sticky="w")
+        # Favorites
+        fr_fav = ctk.CTkFrame(self.tab_general, fg_color="transparent")
+        fr_fav.pack(fill="x", padx=10, pady=10)
+        ctk.CTkLabel(fr_fav, text="Copy favorite wallpapers to:").pack(side="left", padx=10)
+        self.fav_dir_entry = ctk.CTkEntry(fr_fav, width=300)
+        self.fav_dir_entry.pack(side="left")
 
-        self.cb_natgeo = ctk.CTkCheckBox(self.sources_frame, text="NatGeo POTD Proxy", variable=self.var_natgeo)
-        self.cb_natgeo.grid(row=6, column=0, padx=10, pady=5, sticky="w")
+    def create_wallpaper_tab(self):
+        ctk.CTkLabel(self.tab_wallpaper, text="Effects", font=ctk.CTkFont(weight="bold")).pack(anchor="w", padx=10, pady=(10,5))
+        ctk.CTkLabel(self.tab_wallpaper, text="Apply advanced visual filters to images:", text_color="gray").pack(anchor="w", padx=10, pady=(0,10))
         
-        # --- Advanced Settings Frame ---
-        self.adv_frame = ctk.CTkFrame(self, corner_radius=10)
-        self.adv_frame.grid(row=3, column=0, padx=20, pady=10, sticky="ew")
+        self.var_grayscale = ctk.BooleanVar()
+        self.var_heavy_blur = ctk.BooleanVar()
+        self.var_soft_blur = ctk.BooleanVar()
+        self.var_oil = ctk.BooleanVar()
+        self.var_pointillism = ctk.BooleanVar()
+        self.var_pixellate = ctk.BooleanVar()
         
-        self.adv_label = ctk.CTkLabel(self.adv_frame, text="Advanced source configs:", font=ctk.CTkFont(weight="bold"))
-        self.adv_label.grid(row=0, column=0, padx=10, pady=5, sticky="w")
+        grid_fr = ctk.CTkFrame(self.tab_wallpaper, fg_color="transparent")
+        grid_fr.pack(fill="x", padx=10)
         
-        self.local_dir_label = ctk.CTkLabel(self.adv_frame, text="Local Directory Path:")
-        self.local_dir_label.grid(row=1, column=0, padx=10, pady=5, sticky="w")
-        self.local_dir_entry = ctk.CTkEntry(self.adv_frame, width=300)
-        self.local_dir_entry.grid(row=1, column=1, padx=10, pady=5, sticky="w")
+        ctk.CTkCheckBox(grid_fr, text="Grayscale", variable=self.var_grayscale).grid(row=0, column=0, padx=10, pady=10, sticky="w")
+        ctk.CTkCheckBox(grid_fr, text="Heavy blur", variable=self.var_heavy_blur).grid(row=0, column=1, padx=10, pady=10, sticky="w")
+        ctk.CTkCheckBox(grid_fr, text="Soft blur", variable=self.var_soft_blur).grid(row=0, column=2, padx=10, pady=10, sticky="w")
+        ctk.CTkCheckBox(grid_fr, text="Oil painting", variable=self.var_oil).grid(row=1, column=0, padx=10, pady=10, sticky="w")
+        ctk.CTkCheckBox(grid_fr, text="Pointillism", variable=self.var_pointillism).grid(row=1, column=1, padx=10, pady=10, sticky="w")
+        ctk.CTkCheckBox(grid_fr, text="Pixellate", variable=self.var_pixellate).grid(row=1, column=2, padx=10, pady=10, sticky="w")
 
-        self.fav_dir_label = ctk.CTkLabel(self.adv_frame, text="Favorites Save Target:")
-        self.fav_dir_label.grid(row=2, column=0, padx=10, pady=5, sticky="w")
-        self.fav_dir_entry = ctk.CTkEntry(self.adv_frame, width=300)
-        self.fav_dir_entry.grid(row=2, column=1, padx=10, pady=5, sticky="w")
+    def create_quotes_tab(self):
+        self.var_quote_env = ctk.BooleanVar()
+        ctk.CTkCheckBox(self.tab_quotes, text="Show random wise quotes on the desktop", variable=self.var_quote_env).pack(anchor="w", padx=10, pady=10)
         
-        # --- OS Integrations ---
-        self.os_frame = ctk.CTkFrame(self, corner_radius=10)
-        self.os_frame.grid(row=4, column=0, padx=20, pady=10, sticky="ew")
+        fr_app = ctk.CTkFrame(self.tab_quotes)
+        fr_app.pack(fill="x", padx=10, anchor="w")
         
-        self.os_label = ctk.CTkLabel(self.os_frame, text="OS Integrations:", font=ctk.CTkFont(weight="bold"))
-        self.os_label.grid(row=0, column=0, padx=10, pady=5, sticky="w")
+        # Appearance
+        ctk.CTkLabel(fr_app, text="Appearance", font=ctk.CTkFont(weight="bold")).grid(row=0, column=0, padx=10, pady=10, sticky="w")
+        ctk.CTkLabel(fr_app, text="Text color (Hex):").grid(row=1, column=0, padx=10, pady=5, sticky="w")
+        self.quote_color_entry = ctk.CTkEntry(fr_app, width=100)
+        self.quote_color_entry.grid(row=1, column=1, padx=10, pady=5, sticky="w")
         
-        self.var_autostart = ctk.BooleanVar()
-        self.cb_autostart = ctk.CTkCheckBox(self.os_frame, text="Start with Windows", variable=self.var_autostart)
-        self.cb_autostart.grid(row=1, column=0, padx=10, pady=5, sticky="w")
+        ctk.CTkLabel(fr_app, text="Font size:").grid(row=1, column=2, padx=10, pady=5, sticky="w")
+        self.quote_font_entry = ctk.CTkEntry(fr_app, width=60)
+        self.quote_font_entry.grid(row=1, column=3, padx=10, pady=5, sticky="w")
         
-        self.var_pause_fs = ctk.BooleanVar()
-        self.cb_pause_fs = ctk.CTkCheckBox(self.os_frame, text="Pause rotation if Game/Fullscreen app is running (Performance Mode)", variable=self.var_pause_fs)
-        self.cb_pause_fs.grid(row=2, column=0, padx=10, pady=5, sticky="w")
+        self.var_quote_shadow = ctk.BooleanVar()
+        ctk.CTkCheckBox(fr_app, text="Draw a text shadow", variable=self.var_quote_shadow).grid(row=1, column=4, padx=10, pady=5, sticky="w")
         
-        # --- Overlays Frame ---
-        self.overlay_frame = ctk.CTkFrame(self, corner_radius=10)
-        self.overlay_frame.grid(row=5, column=0, padx=20, pady=10, sticky="ew")
+        ctk.CTkLabel(fr_app, text="Backdrop color:").grid(row=2, column=0, padx=10, pady=5, sticky="w")
+        self.quote_bg_entry = ctk.CTkEntry(fr_app, width=100)
+        self.quote_bg_entry.grid(row=2, column=1, padx=10, pady=5, sticky="w")
         
-        self.overlay_label = ctk.CTkLabel(self.overlay_frame, text="Desktop Overlays:", font=ctk.CTkFont(weight="bold"))
-        self.overlay_label.grid(row=0, column=0, padx=10, pady=5, sticky="w")
+        ctk.CTkLabel(fr_app, text="Opacity (%):").grid(row=2, column=2, padx=10, pady=5, sticky="w")
+        self.quote_bg_op_entry = ctk.CTkEntry(fr_app, width=60)
+        self.quote_bg_op_entry.grid(row=2, column=3, padx=10, pady=5, sticky="w")
+
+        # Placement
+        fr_place = ctk.CTkFrame(self.tab_quotes)
+        fr_place.pack(fill="x", padx=10, pady=10, anchor="w")
+        ctk.CTkLabel(fr_place, text="Placement", font=ctk.CTkFont(weight="bold")).grid(row=0, column=0, padx=10, pady=10, sticky="w")
         
-        self.var_clock = ctk.BooleanVar()
-        self.cb_clock = ctk.CTkCheckBox(self.overlay_frame, text="Show Digital Clock", variable=self.var_clock)
-        self.cb_clock.grid(row=1, column=0, padx=10, pady=5, sticky="w")
+        ctk.CTkLabel(fr_place, text="Horizontal position:").grid(row=1, column=0, padx=10, pady=5, sticky="w")
+        self.quote_x_slider = ctk.CTkSlider(fr_place, from_=0, to=100)
+        self.quote_x_slider.grid(row=1, column=1, padx=10, pady=5, sticky="w")
         
-        self.var_quote = ctk.BooleanVar()
-        self.cb_quote = ctk.CTkCheckBox(self.overlay_frame, text="Show Daily Motivational Quote", variable=self.var_quote)
-        self.cb_quote.grid(row=2, column=0, padx=10, pady=5, sticky="w")
+        ctk.CTkLabel(fr_place, text="Vertical position:").grid(row=2, column=0, padx=10, pady=5, sticky="w")
+        self.quote_y_slider = ctk.CTkSlider(fr_place, from_=0, to=100)
+        self.quote_y_slider.grid(row=2, column=1, padx=10, pady=5, sticky="w")
         
-        # --- Save Button ---
-        self.save_button = ctk.CTkButton(self, text="Save Settings & Close", command=self.save_and_close)
-        self.save_button.grid(row=6, column=0, padx=20, pady=20, sticky="e")
+        ctk.CTkLabel(fr_place, text="Quotes area width (%):").grid(row=1, column=2, padx=10, pady=5, sticky="w")
+        self.quote_w_slider = ctk.CTkSlider(fr_place, from_=10, to=100)
+        self.quote_w_slider.grid(row=1, column=3, padx=10, pady=5, sticky="w")
+
+    def create_clock_tab(self):
+        self.var_clock_env = ctk.BooleanVar()
+        ctk.CTkCheckBox(self.tab_clock, text="Show a nice digital clock on the desktop", variable=self.var_clock_env).pack(anchor="w", padx=10, pady=10)
+        
+        fr_app = ctk.CTkFrame(self.tab_clock)
+        fr_app.pack(fill="x", padx=10, anchor="w")
+        
+        ctk.CTkLabel(fr_app, text="Appearance", font=ctk.CTkFont(weight="bold")).grid(row=0, column=0, padx=10, pady=10, sticky="w")
+        
+        ctk.CTkLabel(fr_app, text="Clock font size:").grid(row=1, column=0, padx=10, pady=5, sticky="w")
+        self.clock_size_entry = ctk.CTkEntry(fr_app, width=60)
+        self.clock_size_entry.grid(row=1, column=1, padx=10, pady=5, sticky="w")
+        
+        ctk.CTkLabel(fr_app, text="Date font size:").grid(row=2, column=0, padx=10, pady=5, sticky="w")
+        self.date_size_entry = ctk.CTkEntry(fr_app, width=60)
+        self.date_size_entry.grid(row=2, column=1, padx=10, pady=5, sticky="w")
+
+    def create_downloading_tab(self):
+        fr_fetch = ctk.CTkFrame(self.tab_downloading, fg_color="transparent")
+        fr_fetch.pack(fill="x", padx=10, pady=10)
+        ctk.CTkLabel(fr_fetch, text="Fetch Folder", font=ctk.CTkFont(weight="bold")).pack(anchor="w")
+        ctk.CTkLabel(fr_fetch, text="Save manually downloaded wallpapers to:", text_color="gray").pack(anchor="w", pady=(0,5))
+        self.fetch_dir_entry = ctk.CTkEntry(fr_fetch, width=400)
+        self.fetch_dir_entry.pack(anchor="w")
+        
+        fr_clip = ctk.CTkFrame(self.tab_downloading, fg_color="transparent")
+        fr_clip.pack(fill="x", padx=10, pady=20)
+        ctk.CTkLabel(fr_clip, text="Clipboard monitoring", font=ctk.CTkFont(weight="bold")).pack(anchor="w")
+        
+        self.var_clipboard = ctk.BooleanVar()
+        ctk.CTkCheckBox(fr_clip, text="Monitor clipboard for image URLs and fetch them", variable=self.var_clipboard).pack(anchor="w", pady=5)
+        ctk.CTkLabel(fr_clip, text="Valid hosts: wallhaven.cc, imgur.com, reddit.com", text_color="gray").pack(anchor="w", padx=25)
 
     def load_current_settings(self):
-        # Interval
-        self.interval_entry.insert(0, str(config.get("interval_minutes", 15)))
+        c = config
         
-        # Sources
-        active_sources = config.get("sources", [])
-        self.var_unsplash.set("unsplash" in active_sources)
-        self.var_wallhaven.set("wallhaven" in active_sources)
-        self.var_reddit.set("reddit" in active_sources)
-        self.var_local.set("local" in active_sources)
-        self.var_bing.set("bing" in active_sources)
-        self.var_natgeo.set("natgeo" in active_sources)
+        # General
+        self.var_autostart.set(c.get("autostart", False))
+        self.var_pause_fs.set(c.get("pause_on_fullscreen", True))
         
-        # Advanced
-        local_paths = config.get("local_paths", [])
-        if local_paths:
-            self.local_dir_entry.insert(0, local_paths[0])
-            
-        self.fav_dir_entry.insert(0, config.get("favorites_folder", ""))
-            
-        # OS Integration (Check registry indirectly by seeing if we flagged it in config, 
-        # or checking the actual registry. For simplicity, we track intention in config)
-        self.var_autostart.set(config.get("autostart", False))
+        self.interval_entry.insert(0, str(c.get("interval_amount", 5)))
+        self.interval_unit_var.set(c.get("interval_unit", "minutes"))
         
-        # v1.3 Features
-        features = config.get("features", {})
-        self.var_pause_fs.set(features.get("pause_on_fullscreen", True))
-        self.var_clock.set(features.get("show_clock", False))
-        self.var_quote.set(features.get("show_quote", False))
+        srcs = c.get("sources", [])
+        self.var_unsplash.set("unsplash" in srcs)
+        self.var_wallhaven.set("wallhaven" in srcs)
+        self.var_reddit.set("reddit" in srcs)
+        self.var_local.set("local" in srcs)
+        self.var_bing.set("bing" in srcs)
+        self.var_natgeo.set("natgeo" in srcs)
+        
+        self.local_dir_entry.insert(0, c.get("local_paths", [""])[0] if c.get("local_paths") else "")
+        self.fav_dir_entry.insert(0, c.get("favorites_folder", ""))
+        
+        # Wallpaper
+        eff = c.get("effects", {})
+        self.var_grayscale.set(eff.get("grayscale", False))
+        self.var_heavy_blur.set(eff.get("heavy_blur", False))
+        self.var_soft_blur.set(eff.get("soft_blur", False))
+        self.var_oil.set(eff.get("oil_painting", False))
+        self.var_pointillism.set(eff.get("pointillism", False))
+        self.var_pixellate.set(eff.get("pixellate", False))
+        
+        # Quotes
+        q = c.get("quotes", {})
+        self.var_quote_env.set(q.get("enabled", False))
+        self.quote_color_entry.insert(0, q.get("text_color", "#FFFFFF"))
+        self.quote_font_entry.insert(0, str(q.get("font_size", 30)))
+        self.var_quote_shadow.set(q.get("shadow", True))
+        self.quote_bg_entry.insert(0, q.get("bg_color", "#000000"))
+        self.quote_bg_op_entry.insert(0, str(q.get("bg_opacity", 50)))
+        self.quote_x_slider.set(q.get("pos_x", 50))
+        self.quote_y_slider.set(q.get("pos_y", 50))
+        self.quote_w_slider.set(q.get("width", 50))
+        
+        # Clock
+        clk = c.get("clock", {})
+        self.var_clock_env.set(clk.get("enabled", False))
+        self.clock_size_entry.insert(0, str(clk.get("clock_font_size", 70)))
+        self.date_size_entry.insert(0, str(clk.get("date_font_size", 30)))
+        
+        # Downloading
+        self.fetch_dir_entry.insert(0, c.get("fetch_folder", ""))
+        clip = c.get("clipboard", {})
+        self.var_clipboard.set(clip.get("enabled", False))
 
     def save_and_close(self):
-        new_interval = self.interval_entry.get()
-        if new_interval.isdigit():
-            config["interval_minutes"] = int(new_interval)
-            
-        new_sources = []
-        if self.var_unsplash.get(): new_sources.append("unsplash")
-        if self.var_wallhaven.get(): new_sources.append("wallhaven")
-        if self.var_reddit.get(): new_sources.append("reddit")
-        if self.var_local.get(): new_sources.append("local")
-        if self.var_bing.get(): new_sources.append("bing")
-        if self.var_natgeo.get(): new_sources.append("natgeo")
-        config["sources"] = new_sources
+        c = config
         
-        new_local = self.local_dir_entry.get().strip()
-        if new_local:
-            config["local_paths"] = [new_local]
-            
-        new_fav = self.fav_dir_entry.get().strip()
-        if new_fav:
-            config["favorites_folder"] = new_fav
-            
-        # OS Int
-        autostart_enabled = self.var_autostart.get()
-        config["autostart"] = autostart_enabled
-        toggle_autostart(autostart_enabled)
+        c["autostart"] = self.var_autostart.get()
+        c["pause_on_fullscreen"] = self.var_pause_fs.get()
+        toggle_autostart(c["autostart"])
         
-        # v1.3 Features
-        if "features" not in config:
-            config["features"] = {}
-        config["features"]["pause_on_fullscreen"] = self.var_pause_fs.get()
-        config["features"]["show_clock"] = self.var_clock.get()
-        config["features"]["show_quote"] = self.var_quote.get()
-            
-        save_config(config)
-        logger.info("GUI settings saved.")
+        amt = self.interval_entry.get()
+        if amt.isdigit():
+            c["interval_amount"] = int(amt)
+        c["interval_unit"] = self.interval_unit_var.get()
+        
+        ns = []
+        if self.var_unsplash.get(): ns.append("unsplash")
+        if self.var_wallhaven.get(): ns.append("wallhaven")
+        if self.var_reddit.get(): ns.append("reddit")
+        if self.var_local.get(): ns.append("local")
+        if self.var_bing.get(): ns.append("bing")
+        if self.var_natgeo.get(): ns.append("natgeo")
+        c["sources"] = ns
+        
+        ldir = self.local_dir_entry.get().strip()
+        if ldir: c["local_paths"] = [ldir]
+        
+        fdir = self.fav_dir_entry.get().strip()
+        if fdir: c["favorites_folder"] = fdir
+        
+        c["effects"]["grayscale"] = self.var_grayscale.get()
+        c["effects"]["heavy_blur"] = self.var_heavy_blur.get()
+        c["effects"]["soft_blur"] = self.var_soft_blur.get()
+        c["effects"]["oil_painting"] = self.var_oil.get()
+        c["effects"]["pointillism"] = self.var_pointillism.get()
+        c["effects"]["pixellate"] = self.var_pixellate.get()
+        
+        c["quotes"]["enabled"] = self.var_quote_env.get()
+        c["quotes"]["text_color"] = self.quote_color_entry.get().strip()
+        fz = self.quote_font_entry.get()
+        if fz.isdigit(): c["quotes"]["font_size"] = int(fz)
+        c["quotes"]["shadow"] = self.var_quote_shadow.get()
+        c["quotes"]["bg_color"] = self.quote_bg_entry.get().strip()
+        op = self.quote_bg_op_entry.get()
+        if op.isdigit(): c["quotes"]["bg_opacity"] = int(op)
+        c["quotes"]["pos_x"] = int(self.quote_x_slider.get())
+        c["quotes"]["pos_y"] = int(self.quote_y_slider.get())
+        c["quotes"]["width"] = int(self.quote_w_slider.get())
+        
+        c["clock"]["enabled"] = self.var_clock_env.get()
+        cs = self.clock_size_entry.get()
+        if cs.isdigit(): c["clock"]["clock_font_size"] = int(cs)
+        ds = self.date_size_entry.get()
+        if ds.isdigit(): c["clock"]["date_font_size"] = int(ds)
+        
+        fetdir = self.fetch_dir_entry.get().strip()
+        if fetdir: c["fetch_folder"] = fetdir
+        c["clipboard"]["enabled"] = self.var_clipboard.get()
+        
+        save_config(c)
+        logger.info("GUI TabView settings saved.")
         
         if self.on_close_callback:
             self.on_close_callback()
-            
         self.destroy()
 
 def open_gui(on_close_callback=None):

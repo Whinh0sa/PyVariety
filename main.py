@@ -11,6 +11,7 @@ from processor import process_image
 from setter import set_wallpaper
 from scheduler import WallpaperScheduler
 from tray import TrayIcon
+from clipboard_monitor import ClipboardMonitor
 import gui
 
 logger = logging.getLogger(__name__)
@@ -23,11 +24,15 @@ class PyVarietyApp:
         # Initialize the background scheduler
         self.scheduler = WallpaperScheduler(
             action_func=self.change_wallpaper,
-            interval_minutes=self.config.get("interval_minutes", 15)
+            interval_amount=self.config.get("interval_amount", 5),
+            interval_unit=self.config.get("interval_unit", "minutes")
         )
         
         # Track active wallpaper to prevent redundant processing if re-triggered
         self.current_wallpaper = None
+        
+        # Initialize Clipboard Monitor
+        self.clipboard_monitor = ClipboardMonitor(self.config, self.set_specific_wallpaper)
 
     def _get_active_wallpaper_path(self):
         """Returns the currently active processed wallpaper or None."""
@@ -35,6 +40,25 @@ class PyVarietyApp:
             return self.fetcher.playlist.current
         return None
 
+    def set_specific_wallpaper(self, filepath: str):
+        """Processes and sets a specific image file instead of pulling from the playlist."""
+        logger.info(f"Setting specific wallpaper from: {filepath}")
+        if not os.path.exists(filepath):
+            return
+            
+        processed_path = os.path.join(
+            os.path.dirname(filepath), 
+            "processed_" + os.path.basename(filepath)
+        )
+        
+        final_path = process_image(filepath, self.config, processed_path)
+        success = set_wallpaper(final_path)
+        if success:
+            self.current_wallpaper = final_path
+            logger.info("Specific wallpaper set successfully.")
+            if hasattr(self, 'tray') and self.tray and self.tray.icon:
+                self.tray.icon.update_menu()
+                
     def change_wallpaper(self):
         """Core logic to fetch, process, and set a new wallpaper."""
         logger.info("Initiating wallpaper change sequence...")
@@ -124,7 +148,10 @@ class PyVarietyApp:
             # Refresh config dynamically after GUI save
             from config import load_config
             self.config = load_config()
-            self.scheduler.set_interval(self.config.get("interval_minutes", 15))
+            self.scheduler.set_interval(
+                self.config.get("interval_amount", 5),
+                self.config.get("interval_unit", "minutes")
+            )
             self.fetcher = Fetcher(self.config)
             logger.info("Config dynamically reloaded from GUI.")
             
@@ -147,6 +174,9 @@ class PyVarietyApp:
         
         # Start background scheduling daemon
         self.scheduler.start()
+        
+        # Start clipboard daemon
+        self.clipboard_monitor.start()
         
         # Event to signal main thread to open GUI
         self.gui_event = threading.Event()
@@ -187,6 +217,7 @@ class PyVarietyApp:
         """Gracefully shuts down all threads and loops."""
         logger.info("Shutting down PyVariety...")
         self.scheduler.stop()
+        self.clipboard_monitor.stop()
         if hasattr(self, 'tray') and self.tray and self.tray.icon:
             self.tray.icon.stop()
             
@@ -197,7 +228,10 @@ class PyVarietyApp:
         def on_gui_close():
             from config import load_config
             self.config = load_config()
-            self.scheduler.set_interval(self.config.get("interval_minutes", 15))
+            self.scheduler.set_interval(
+                self.config.get("interval_amount", 5),
+                self.config.get("interval_unit", "minutes")
+            )
             self.fetcher = Fetcher(self.config)
             logger.info("Config dynamically reloaded from GUI.")
             
