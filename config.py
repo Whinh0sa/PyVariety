@@ -3,14 +3,26 @@ import logging
 import os
 import collections.abc
 from pathlib import Path
-
-# Setup logging configuration
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
-logger = logging.getLogger(__name__)
+import sys
 
 APP_DIR = Path(os.path.expanduser("~")) / ".pyvariety"
+APP_DIR.mkdir(parents=True, exist_ok=True)
+
 CONFIG_FILE = APP_DIR / "config.json"
 CACHE_DIR = APP_DIR / "cache"
+LOG_FILE = APP_DIR / "pyvariety.log"
+
+# Setup logging configuration safely to avoid --windowed stdout crashes
+handlers = [logging.FileHandler(LOG_FILE, encoding='utf-8')]
+if sys.stderr is not None:
+    handlers.append(logging.StreamHandler(sys.stderr))
+
+logging.basicConfig(
+    level=logging.INFO, 
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    handlers=handlers
+)
+logger = logging.getLogger(__name__)
 
 DEFAULT_CONFIG = {
     "interval_amount": 5,
