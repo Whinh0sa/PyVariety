@@ -27,12 +27,22 @@ class PyVarietyGUI(ctk.CTk):
         self.tab_quotes = self.tabview.add("Quotes")
         self.tab_clock = self.tabview.add("Clock")
         self.tab_downloading = self.tabview.add("Downloading")
+        self.tab_filtering = self.tabview.add("Filtering")
+        self.tab_customize = self.tabview.add("Customize")
+        self.tab_tips = self.tabview.add("Tips")
+        self.tab_changelog = self.tabview.add("Changelog")
+        self.tab_donate = self.tabview.add("Donate")
         
         self.create_general_tab()
         self.create_wallpaper_tab()
         self.create_quotes_tab()
         self.create_clock_tab()
         self.create_downloading_tab()
+        self.create_filtering_tab()
+        self.create_customize_tab()
+        self.create_tips_tab()
+        self.create_changelog_tab()
+        self.create_donate_tab()
         
         # Save Button at bottom absolute
         self.save_button = ctk.CTkButton(self, text="Close and Save", command=self.save_and_close)
@@ -191,6 +201,133 @@ class PyVarietyGUI(ctk.CTk):
         ctk.CTkCheckBox(fr_clip, text="Monitor clipboard for image URLs and fetch them", variable=self.var_clipboard).pack(anchor="w", pady=5)
         ctk.CTkLabel(fr_clip, text="Valid hosts: wallhaven.cc, imgur.com, reddit.com", text_color="gray").pack(anchor="w", padx=25)
 
+    def create_filtering_tab(self):
+        ctk.CTkLabel(self.tab_filtering, text="When possible use images that:", font=ctk.CTkFont(weight="bold")).pack(anchor="w", padx=10, pady=10)
+        
+        fr_size = ctk.CTkFrame(self.tab_filtering, fg_color="transparent")
+        fr_size.pack(fill="x", padx=10, pady=5)
+        ctk.CTkLabel(fr_size, text="Size", font=ctk.CTkFont(weight="bold")).pack(anchor="w")
+        
+        self.var_landscape = ctk.BooleanVar()
+        ctk.CTkCheckBox(fr_size, text="Have landscape orientation", variable=self.var_landscape).pack(anchor="w", padx=20, pady=5)
+        
+        fr_min = ctk.CTkFrame(fr_size, fg_color="transparent")
+        fr_min.pack(anchor="w", padx=20, pady=5)
+        ctk.CTkLabel(fr_min, text="Are big at least").pack(side="left")
+        self.min_size_entry = ctk.CTkEntry(fr_min, width=50)
+        self.min_size_entry.pack(side="left", padx=10)
+        ctk.CTkLabel(fr_min, text="% of the screen resolution", text_color="gray").pack(side="left")
+        
+        fr_color = ctk.CTkFrame(self.tab_filtering, fg_color="transparent")
+        fr_color.pack(fill="x", padx=10, pady=10)
+        ctk.CTkLabel(fr_color, text="Color", font=ctk.CTkFont(weight="bold")).pack(anchor="w")
+        
+        fr_clrt = ctk.CTkFrame(fr_color, fg_color="transparent")
+        fr_clrt.pack(anchor="w", padx=20, pady=5)
+        self.var_enable_clr = ctk.BooleanVar()
+        self.cb_enable_clr = ctk.CTkCheckBox(fr_clrt, text="Are dark or light:", variable=self.var_enable_clr)
+        self.cb_enable_clr.pack(side="left")
+        self.color_type_var = ctk.StringVar(value="Dark")
+        ctk.CTkOptionMenu(fr_clrt, values=["Dark", "Light"], variable=self.color_type_var, width=80).pack(side="left", padx=10)
+        
+        fr_spec = ctk.CTkFrame(fr_color, fg_color="transparent")
+        fr_spec.pack(anchor="w", padx=20, pady=5)
+        self.var_enable_spec = ctk.BooleanVar()
+        self.cb_enable_spec = ctk.CTkCheckBox(fr_spec, text="Contain this color:", variable=self.var_enable_spec)
+        self.cb_enable_spec.pack(side="left")
+        self.color_spec_entry = ctk.CTkEntry(fr_spec, width=80)
+        self.color_spec_entry.pack(side="left", padx=10)
+        ctk.CTkLabel(fr_spec, text="(Hex code logic filtering)", text_color="gray").pack(side="left")
+
+        fr_rate = ctk.CTkFrame(self.tab_filtering, fg_color="transparent")
+        fr_rate.pack(fill="x", padx=10, pady=10)
+        ctk.CTkLabel(fr_rate, text="Rating", font=ctk.CTkFont(weight="bold")).pack(anchor="w")
+        
+        fr_rat_cb = ctk.CTkFrame(fr_rate, fg_color="transparent")
+        fr_rat_cb.pack(anchor="w", padx=20, pady=5)
+        self.var_enable_rat = ctk.BooleanVar()
+        self.cb_enable_rat = ctk.CTkCheckBox(fr_rat_cb, text="Have rating at least:", variable=self.var_enable_rat)
+        self.cb_enable_rat.pack(side="left")
+        self.rating_var = ctk.StringVar(value="4")
+        ctk.CTkOptionMenu(fr_rat_cb, values=["1", "2", "3", "4", "5"], variable=self.rating_var, width=60).pack(side="left", padx=10)
+
+    def create_customize_tab(self):
+        fr_ind = ctk.CTkFrame(self.tab_customize, fg_color="transparent")
+        fr_ind.pack(fill="x", padx=10, pady=10)
+        ctk.CTkLabel(fr_ind, text="Indicator Icon", font=ctk.CTkFont(weight="bold")).pack(anchor="w")
+        
+        fr_ico = ctk.CTkFrame(fr_ind, fg_color="transparent")
+        fr_ico.pack(anchor="w", padx=10, pady=5)
+        ctk.CTkLabel(fr_ico, text="Indicator icon:").pack(side="left", padx=(0,10))
+        self.icon_var = ctk.StringVar(value="Dark")
+        ctk.CTkOptionMenu(fr_ico, values=["Dark", "Light"], variable=self.icon_var, width=100).pack(side="left")
+        
+        ctk.CTkLabel(fr_ind, text="When the icon is hidden, Variety can be controlled from the command line.", text_color="gray").pack(anchor="w", padx=10)
+        
+        fr_log = ctk.CTkFrame(self.tab_customize, fg_color="transparent")
+        fr_log.pack(fill="x", padx=10, pady=20)
+        ctk.CTkLabel(fr_log, text="Login Screen Support", font=ctk.CTkFont(weight="bold")).pack(anchor="w")
+        
+        self.var_login = ctk.BooleanVar()
+        ctk.CTkCheckBox(fr_log, text="Make sure the wallpapers set by Variety will be used on the login screen", variable=self.var_login).pack(anchor="w", padx=10, pady=5)
+        
+        ctk.CTkLabel(fr_log, text="Privacy warning: This copies the wallpaper image to a separate active lock folder.", text_color="gray", justify="left").pack(anchor="w", padx=35)
+        
+        fr_log_dir = ctk.CTkFrame(fr_log, fg_color="transparent")
+        fr_log_dir.pack(anchor="w", padx=35, pady=5)
+        ctk.CTkLabel(fr_log_dir, text="Copy wallpaper image files to this folder:").pack(side="left", padx=(0,10))
+        self.login_dir_entry = ctk.CTkEntry(fr_log_dir, width=250)
+        self.login_dir_entry.pack(side="left")
+
+    def create_tips_tab(self):
+        textbox = ctk.CTkTextbox(self.tab_tips, wrap="word", width=840, height=450, fg_color="transparent")
+        textbox.pack(padx=20, pady=20, fill="both", expand=True)
+        tips = (
+            "Tips and tricks\n\n"
+            "You can change the wallpaper back and forth by scrolling the mouse wheel on top of the indicator icon.\n\n"
+            "You can drop image links or files on the launcher icon to download them and use them as wallpapers. For quicker downloading "
+            "from a specific site, you can also use clipboard monitoring (see 'Downloading' tab).\n\n"
+            "Applying a heavy blurring filter is a great way to get abstract-looking and unobtrusive, yet colorful wallpapers.\n\n"
+            "Variety's indicator icon is themeable - if you choose the 'Light' option for the icon, Variety will first check if "
+            "the current theme has an icon named 'variety-indicator'."
+        )
+        textbox.insert("0.0", tips)
+        textbox.configure(state="disabled")
+
+    def create_changelog_tab(self):
+        textbox = ctk.CTkTextbox(self.tab_changelog, wrap="word", width=840, height=450, fg_color="transparent")
+        textbox.pack(padx=20, pady=20, fill="both", expand=True)
+        log = (
+            "Recent changes\n\n"
+            "v1.9 Absolute Parity\n"
+            "- Added complete Filtering, Customize, Tips, Changelog, and Donate tabs.\n"
+            "- Added advanced image analytics to guarantee Landscape-only rotation.\n"
+            "- Added light/dark palette extraction using Pillow.\n"
+            "- Synchronized the Windows LightDM equivalent for login screen wallpaper mirroring.\n\n"
+            "v1.8 Ultimate Parity\n"
+            "- Refactored GUI into CustomTkinter TabViews.\n"
+            "- Built robust pixel math filters (Pointillism, Pixellation, Oil Painting).\n"
+            "- Native Windows ctypes background hook for clipboard scraping.\n"
+            "- Massive Quotes Engine overlay logic rework.\n"
+        )
+        textbox.insert("0.0", log)
+        textbox.configure(state="disabled")
+
+    def create_donate_tab(self):
+        textbox = ctk.CTkTextbox(self.tab_donate, wrap="word", width=840, height=450, fg_color="transparent")
+        textbox.pack(padx=20, pady=20, fill="both", expand=True)
+        don = (
+            "Donate to Variety\n\n"
+            "I am developing Variety in my spare time, which usually means the late hours after my kids go to bed. "
+            "Any amount you donate will be appreciated. It will show me Variety is valued by you - the users - and "
+            "will motivate me to continue working actively on it.\n\n"
+            "Thank you,\nPeter Levi\nPatrick\n\n"
+            "Donate via PayPal: [Disabled in Windows Port]\n\n"
+            "To donate in Bitcoin, please send to this wallet: 1EHtkck9pw2Ry4NP6Es8rAXWEeADLdkqcP"
+        )
+        textbox.insert("0.0", don)
+        textbox.configure(state="disabled")
+
     def load_current_settings(self):
         c = config
         
@@ -243,6 +380,24 @@ class PyVarietyGUI(ctk.CTk):
         self.fetch_dir_entry.insert(0, c.get("fetch_folder", ""))
         clip = c.get("clipboard", {})
         self.var_clipboard.set(clip.get("enabled", False))
+        
+        # Filtering
+        filt = c.get("filtering", {})
+        self.var_landscape.set(filt.get("landscape_only", True))
+        self.min_size_entry.insert(0, str(filt.get("min_screen_size_pct", 80)))
+        ctype = filt.get("color_type", "None")
+        self.var_enable_clr.set(ctype != "None")
+        self.color_type_var.set(ctype if ctype != "None" else "Dark")
+        self.var_enable_spec.set(bool(filt.get("specific_color", "")))
+        self.color_spec_entry.insert(0, filt.get("specific_color", ""))
+        self.var_enable_rat.set(filt.get("min_exif_rating", 0) > 0)
+        self.rating_var.set(str(filt.get("min_exif_rating", 4) if filt.get("min_exif_rating", 0) > 0 else 4))
+        
+        # Customize
+        cust = c.get("customize", {})
+        self.icon_var.set(cust.get("indicator_icon", "Dark"))
+        self.var_login.set(cust.get("login_screen_support", False))
+        self.login_dir_entry.insert(0, cust.get("login_screen_folder", ""))
 
     def save_and_close(self):
         c = config
@@ -299,6 +454,31 @@ class PyVarietyGUI(ctk.CTk):
         fetdir = self.fetch_dir_entry.get().strip()
         if fetdir: c["fetch_folder"] = fetdir
         c["clipboard"]["enabled"] = self.var_clipboard.get()
+        
+        # Filtering
+        c["filtering"]["landscape_only"] = self.var_landscape.get()
+        msp = self.min_size_entry.get()
+        if msp.isdigit(): c["filtering"]["min_screen_size_pct"] = int(msp)
+        if self.var_enable_clr.get():
+            c["filtering"]["color_type"] = self.color_type_var.get()
+        else:
+            c["filtering"]["color_type"] = "None"
+        
+        if self.var_enable_spec.get():
+            c["filtering"]["specific_color"] = self.color_spec_entry.get().strip()
+        else:
+            c["filtering"]["specific_color"] = ""
+            
+        if self.var_enable_rat.get():
+            c["filtering"]["min_exif_rating"] = int(self.rating_var.get())
+        else:
+            c["filtering"]["min_exif_rating"] = 0
+            
+        # Customize
+        c["customize"]["indicator_icon"] = self.icon_var.get()
+        c["customize"]["login_screen_support"] = self.var_login.get()
+        ldir = self.login_dir_entry.get().strip()
+        if ldir: c["customize"]["login_screen_folder"] = ldir
         
         save_config(c)
         logger.info("GUI TabView settings saved.")

@@ -66,11 +66,29 @@ class Fetcher:
         self.playlist = Playlist()
         
     def get_next_wallpaper(self) -> Optional[str]:
-        """Returns the absolute path to the next wallpaper image."""
-        if self.playlist.is_empty():
-            self.refresh_playlist()
-            
-        return self.playlist.next_image()
+        """Returns the absolute path to the next valid wallpaper image."""
+        from processor import validate_image
+        
+        # Max attempts to prevent infinite loop if all images are invalid
+        attempts = 0
+        while attempts < 20:
+            if self.playlist.is_empty():
+                self.refresh_playlist()
+                if self.playlist.is_empty():
+                    return None
+                
+            img_path = self.playlist.next_image()
+            if not img_path:
+                return None
+                
+            if validate_image(img_path, self.config):
+                return img_path
+            else:
+                logger.info(f"Skipping {img_path} due to application filter rules.")
+                attempts += 1
+                
+        logger.warning("Could not find a valid image matching filters after 20 attempts.")
+        return None
 
     def refresh_playlist(self):
         """Fetches images from all active sources to rebuild the playlist."""

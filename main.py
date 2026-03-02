@@ -40,6 +40,22 @@ class PyVarietyApp:
             return self.fetcher.playlist.current
         return None
 
+    def _handle_login_screen_copy(self, final_path):
+        """Mirrors the active processed image to a public login directory if enabled."""
+        import shutil
+        cust = self.config.get("customize", {})
+        if cust.get("login_screen_support", False):
+            target_dir = cust.get("login_screen_folder", "")
+            if target_dir:
+                try:
+                    os.makedirs(target_dir, exist_ok=True)
+                    # We always overwrite the same file name so LightDM/Lockscreen can target a static path statically
+                    target_path = os.path.join(target_dir, "variety_login_bg.jpg")
+                    shutil.copy2(final_path, target_path)
+                    logger.info(f"Mirrored active wallpaper to login screen directory: {target_dir}")
+                except Exception as e:
+                    logger.error(f"Failed to copy to login screen folder: {e}")
+
     def set_specific_wallpaper(self, filepath: str):
         """Processes and sets a specific image file instead of pulling from the playlist."""
         logger.info(f"Setting specific wallpaper from: {filepath}")
@@ -55,6 +71,7 @@ class PyVarietyApp:
         success = set_wallpaper(final_path)
         if success:
             self.current_wallpaper = final_path
+            self._handle_login_screen_copy(final_path)
             logger.info("Specific wallpaper set successfully.")
             if hasattr(self, 'tray') and self.tray and self.tray.icon:
                 self.tray.icon.update_menu()
@@ -82,6 +99,7 @@ class PyVarietyApp:
         success = set_wallpaper(final_path)
         if success:
             self.current_wallpaper = final_path
+            self._handle_login_screen_copy(final_path)
             logger.info("Wallpaper update sequence complete.")
             if self.tray and self.tray.icon:
                 self.tray.icon.update_menu()
@@ -98,6 +116,7 @@ class PyVarietyApp:
             if final_path:
                 set_wallpaper(final_path)
                 self.current_wallpaper = final_path
+                self._handle_login_screen_copy(final_path)
                 if self.tray and self.tray.icon:
                     self.tray.icon.update_menu()
                     

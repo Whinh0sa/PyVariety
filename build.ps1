@@ -15,6 +15,7 @@ if (-not (Get-Command "pyinstaller" -ErrorAction SilentlyContinue)) {
 # --onedir: creates a folder distribution instead of a single massive block that unpacks to Temp (better performance)
 # --windowed: prevents the black console window from appearing
 # --name PyVariety
-pyinstaller --noconfirm --onedir --windowed --name "PyVariety" $AppPath
+# --collect-all customtkinter: ensures CTK themes and fonts are packaged
+pyinstaller --noconfirm --onedir --windowed --name "PyVariety" --collect-all customtkinter --hidden-import pystray --hidden-import PIL._tkinter_finder $AppPath
 
 Write-Host "Build complete! You can find the executable at: $DistDir\PyVariety\PyVariety.exe" -ForegroundColor Green

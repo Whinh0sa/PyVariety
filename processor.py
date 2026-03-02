@@ -2,7 +2,7 @@ import datetime
 import logging
 import textwrap
 import math
-from PIL import Image, ImageFilter, ImageEnhance, ImageOps, ImageDraw, ImageFont, ImageColor
+from PIL import Image, ImageFilter, ImageEnhance, ImageOps, ImageDraw, ImageFont, ImageColor, ImageStat
 
 from fetcher import fetch_daily_quote
 
@@ -17,6 +17,38 @@ def hex_to_rgba(hex_color, opacity_percent):
         a = int((opacity_percent / 100.0) * 255)
         return (r, g, b, a)
     return (0, 0, 0, 0)
+
+def validate_image(image_path: str, config: dict) -> bool:
+    filt = config.get("filtering", {})
+    if not filt:
+        return True
+        
+    try:
+        with Image.open(image_path) as img:
+            w, h = img.size
+            if filt.get("landscape_only", True):
+                if w <= h:
+                    logger.info(f"Image {image_path} rejected by filter: not landscape.")
+                    return False
+            
+            color_type = filt.get("color_type", "None")
+            if color_type != "None":
+                img_rgb = img.convert("RGB")
+                stat = ImageStat.Stat(img_rgb)
+                r, g, b = stat.mean
+                luminance = (0.299 * r + 0.587 * g + 0.114 * b)
+                
+                if color_type == "Dark" and luminance > 127:
+                    logger.info(f"Image {image_path} rejected by filter: too light (lum {luminance:.1f}).")
+                    return False
+                elif color_type == "Light" and luminance <= 127:
+                    logger.info(f"Image {image_path} rejected by filter: too dark (lum {luminance:.1f}).")
+                    return False
+                    
+            return True
+    except Exception as e:
+        logger.error(f"Error validating image {image_path}: {e}")
+        return False
 
 def process_image(image_path: str, config: dict, output_path: str) -> str:
     effects = config.get("effects", {})

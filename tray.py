@@ -5,12 +5,18 @@ from pystray import MenuItem as item
 
 logger = logging.getLogger(__name__)
 
-def create_icon_image():
+def create_icon_image(icon_type="Dark"):
     """Generates a simple colorful placeholder icon for the system tray."""
     width, height = 64, 64
-    image = Image.new('RGB', (width, height), (30, 30, 30))
-    dc = ImageDraw.Draw(image)
-    dc.rectangle((16, 16, width - 16, height - 16), fill=(0, 150, 255))
+    if icon_type == "Light": # Light theme needs dark contrasting background elements
+        image = Image.new('RGB', (width, height), (220, 220, 220))
+        dc = ImageDraw.Draw(image)
+        dc.rectangle((16, 16, width - 16, height - 16), fill=(0, 100, 200))
+    else:
+        image = Image.new('RGB', (width, height), (30, 30, 30))
+        dc = ImageDraw.Draw(image)
+        dc.rectangle((16, 16, width - 16, height - 16), fill=(0, 150, 255))
+        
     dc.ellipse((24, 24, width - 24, height - 24), fill=(255, 100, 100))
     return image
 
@@ -114,9 +120,13 @@ class TrayIcon:
 
     def run(self):
         """Starts the blocking system tray loop."""
+        icon_type = "Dark"
+        if hasattr(self, 'app_ref') and hasattr(self.app_ref, 'config'):
+            icon_type = self.app_ref.config.get("customize", {}).get("indicator_icon", "Dark")
+            
         self.icon = pystray.Icon(
             "PyVariety", 
-            create_icon_image(), 
+            create_icon_image(icon_type), 
             "PyVariety Wallpaper Manager",
             menu=self._get_menu_items()
         )

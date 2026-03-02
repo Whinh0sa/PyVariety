@@ -56,6 +56,18 @@ DEFAULT_CONFIG = {
         "enabled": False,
         "hosts": ["wallhaven.cc", "imgur.com", "reddit.com", "deviantart.com"]
     },
+    "filtering": {
+        "landscape_only": True,
+        "min_screen_size_pct": 80,
+        "color_type": "None",
+        "specific_color": "",
+        "min_exif_rating": 0
+    },
+    "customize": {
+        "indicator_icon": "Dark",
+        "login_screen_support": False,
+        "login_screen_folder": str(Path.home() / "Pictures")
+    },
     "wallhaven_api_key": "",
     "reddit_subreddits": ["EarthPorn", "wallpaper", "Amoledbackgrounds", "MoviePosterPorn"],
     "autostart": False,
